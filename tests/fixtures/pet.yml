@@ -1,0 +1,9 @@
+Pet:
+  allOf:
+    - $ref: "./new_pet.yml#/NewPet"
+    - type: object
+      properties:
+        name:
+          type: string
+        id:
+          type: integer

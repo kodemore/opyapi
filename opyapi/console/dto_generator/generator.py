@@ -3,7 +3,7 @@ import re
 from os import path
 from typing import Callable, Dict, List
 
-from opyapi.openapi_schema import OpenApiSchema
+from opyapi.json_schema import JsonSchema
 from .processor import (
     AstPropertyNode,
     SchemaProcessor,
@@ -28,7 +28,7 @@ class DtoGenerator:
         class_suffix: str = "",
     ):
         openapi_path = path.realpath(openapi_path)
-        self.openapi_schema = OpenApiSchema(openapi_path)
+        self.openapi_schema = JsonSchema.from_file(openapi_path)
         self.openapi_path = openapi_path
         self.snake_case = snake_case
         self.class_suffix = class_suffix
@@ -36,7 +36,8 @@ class DtoGenerator:
 
     def generate(self, log_info: Callable, log_error: Callable) -> None:
         schema_processor = SchemaProcessor(self.openapi_schema)
-        ast_classes = self._order_ast_classes(schema_processor.process())
+        items = schema_processor.process()
+        ast_classes = self._order_ast_classes(items)
 
         module_str = (
             '"""\n'

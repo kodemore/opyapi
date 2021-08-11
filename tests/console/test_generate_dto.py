@@ -26,9 +26,7 @@ def test_fail_command_invalid_output_module() -> None:
     openapi_path = path.dirname(__file__) + "/../fixtures/openapi.yml"
     result = command_tester.execute(openapi_path)
     assert result == 1
-    assert (
-        command_tester.io.fetch_error() == "Output module `dto.py` does not exists.\n"
-    )
+    assert command_tester.io.fetch_error() == "Output module `dto.py` does not exists.\n"
 
 
 def test_generate_dtos() -> None:

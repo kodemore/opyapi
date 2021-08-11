@@ -1,73 +1,153 @@
 from os import path
 
-import pytest
-
-from opyapi import (
-    JsonReference,
-    OpenApiSchema,
-    URILoader,
-    build_validator_for,
-)
+from opyapi import build_validator_for
+from opyapi.json_schema import JsonSchema, JsonSchemaStore
+import yaml
 
 
-def test_can_read_open_api_schema() -> None:
-    openapi_file = path.realpath(path.dirname(__file__) + "/fixtures/openapi.yml")
-    schema = OpenApiSchema(openapi_file)
+def test_can_instantiate_schema() -> None:
+    schema = JsonSchema({})
 
-    assert "openapi" in schema
-    assert schema["openapi"] == "3.0.0"
-
-
-def test_can_query_open_api_schema() -> None:
-    openapi_file = path.realpath(path.dirname(__file__) + "/fixtures/openapi.yml")
-    schema = OpenApiSchema(openapi_file)
-
-    pet = schema.query("#/components/schemas/Pet")
-
-    assert isinstance(pet, dict)
-    assert "allOf" in pet
-
-    assert isinstance(pet["allOf"][0], JsonReference)
-
-    get_pet = schema.query("/paths/\\/pets/get")
-
-    assert "operationId" in get_pet
-    assert get_pet["operationId"] == "findPets"
+    assert isinstance(schema, JsonSchema)
+    assert schema.id
 
 
-def test_fails_on_invalid_query() -> None:
-    openapi_file = path.realpath(path.dirname(__file__) + "/fixtures/openapi.yml")
-    schema = OpenApiSchema(openapi_file)
-
-    with pytest.raises(KeyError):
-        schema.query("/invalid/query")
-
-
-def test_can_resolve_reference() -> None:
-    loader = URILoader()
-    openapi_file = path.realpath(path.dirname(__file__) + "/fixtures/openapi.yml")
-    reference_id = openapi_file + "#/components/schemas/Pet"
-    reference = JsonReference(reference_id, loader)
-
-    assert "allOf" in reference
-    assert len(reference["allOf"]) == 2
-
-    assert repr(reference) == f"JsonReference({reference_id})"
+def test_can_dump_cycling_references() -> None:
+    schema = JsonSchema(
+        {
+            "definitions": {
+                "Item": {
+                    "type": "object",
+                    "items": {
+                        "$ref": "#/definitions/Item",
+                    },
+                },
+            },
+        }
+    )
+    assert schema.dump() == {"definitions": {"Item": {"type": "object", "items": {"$ref": "#/definitions/Item"}}}}
 
 
-def test_can_build_validator() -> None:
-    openapi_file = path.realpath(path.dirname(__file__) + "/fixtures/openapi.yml")
-    schema = OpenApiSchema(openapi_file)
+def test_can_dump_schema() -> None:
+    filename = path.join(path.dirname(__file__), "fixtures/pet.yml")
+    schema = JsonSchema.from_file(filename)
 
-    pet = schema.query("#/components/schemas/Pet")
-    validator = build_validator_for(pet)
+    schema_dump = schema.dump()
 
-    assert validator({"name": "Bob", "id": 1})
-    with pytest.raises(ValueError):
-        validator({})
-    with pytest.raises(ValueError):
-        validator({"name": "Bob"})
-    with pytest.raises(ValueError):
-        validator({"id": 11})
-    with pytest.raises(ValueError):
-        validator({"name": 1, "id": 1})
+    assert schema_dump == {
+        "Pet": {
+            "allOf": [
+                {
+                    "type": "object",
+                    "required": ["name"],
+                    "properties": {
+                        "name": {"type": "string"},
+                        "base_tag": {"type": "string"},
+                    },
+                },
+                {
+                    "type": "object",
+                    "properties": {
+                        "name": {"type": "string"},
+                        "id": {"type": "integer"},
+                    },
+                },
+            ],
+        },
+    }
+
+
+def test_can_build_validator_for_complex_schema() -> None:
+    openapi_schema = path.join(path.dirname(__file__), "fixtures/openapi_schema.yml")
+    test_file = path.join(path.dirname(__file__), "fixtures/openapi.yml")
+    schema = JsonSchema.from_file(openapi_schema)
+    validate = build_validator_for(schema)
+
+    validate(yaml.full_load(open(test_file)))
+
+
+def test_can_resolve_complex_refs() -> None:
+    # given
+    document = {
+        "documents": {
+            "e-book": {
+                "info": {
+                    "$ref": "#/$defs/info",
+                    "title": {"$ref": "#/$defs/default_title"},
+                },
+                "file_extension": "pdf",
+            },
+        },
+        "$defs": {
+            "info": {
+                "author": {
+                    "$ref": "#/$defs/author",
+                },
+            },
+            "author": {
+                "first_name": "Bob",
+                "last_name": {
+                    "$ref": "#/$defs/bob",
+                },
+            },
+            "bob": "Smith",
+            "default_title": "Default Title",
+        },
+    }
+    schema = JsonSchema(document)
+    # when
+    schema_dump = schema.dump()
+
+    # then
+    assert schema_dump["documents"] == {
+        "e-book": {
+            "info": {"title": "Default Title", "author": {"first_name": "Bob", "last_name": "Smith"}},
+            "file_extension": "pdf",
+        }
+    }
+
+
+def test_dynamic_refs() -> None:
+    # given
+    document = {
+        "documents": {
+            "e-book": {
+                "info": {
+                    "$dynamicRef": "#info",
+                    "title": {"$ref": "#/$defs/default_title"},
+                },
+                "file_extension": "pdf",
+            },
+        },
+        "$defs": {
+            "info": {
+                "$dynamicAnchor": "info",
+                "author": {
+                    "$ref": "#/$defs/author",
+                },
+            },
+            "author": {
+                "first_name": "Bob",
+                "last_name": {
+                    "$ref": "#/$defs/bob",
+                },
+            },
+            "bob": "Smith",
+            "default_title": "Default Title",
+        },
+    }
+    schema = JsonSchema(document)
+    # when
+    dump = schema.dump()
+
+    # then
+    assert dump["documents"] == {
+        "e-book": {
+            "info": {"title": "Default Title", "author": {"first_name": "Bob", "last_name": "Smith"}},
+            "file_extension": "pdf",
+        },
+    }
+
+
+def test_anchors() -> None:
+    pass

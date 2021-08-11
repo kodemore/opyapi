@@ -1,133 +1,104 @@
 import re
-from typing import Callable, Dict, List, Optional, Union
+from typing import Callable, Dict, List, Union, Any
 
 from opyapi.errors import (
     AdditionalPropertyError,
     MaximumPropertyError,
     MinimumPropertyError,
     MissingDependencyError,
-    PropertyNameError,
     PropertyValueError,
     RequiredPropertyError,
     ValidationError,
+    TypeValidationError,
+    PropertyNameError,
 )
 
 
-def validate_object_properties(
-    obj: dict,
+def _validate_property(key: str, value: Any, validator: Callable) -> Any:
+    try:
+        return validator(value)
+    except PropertyValueError as error:
+        raise PropertyValueError(
+            property_name=key + "." + error.context["property_name"],
+            validation_error=error.context["validation_error"],
+            sub_code=error.code,
+        ) from error
+    except ValidationError as error:
+        raise PropertyValueError(
+            property_name=key,
+            validation_error=str(error),
+            sub_code=error.code,
+        ) from error
+    except ValueError as error:
+        raise PropertyValueError(property_name=key, validation_error=str(error), sub_code="value_error") from error
+
+
+def validate_object(
+    obj: Any,
     properties: Dict[str, Callable] = None,
-    additional_properties: Union[bool, Callable] = True,
+    min_properties: int = -1,
+    max_properties: int = -1,
+    required_properties: List[str] = None,
     pattern_properties: Dict[str, Callable] = None,
+    additional_properties: Union[bool, Callable] = True,
+    property_names: Callable = None,
+    dependencies: Dict[str, List[str]] = None,
 ) -> dict:
-    properties = properties if properties is not None else {}
+    if not isinstance(obj, dict):
+        raise TypeValidationError(expected_type="object", actual_type=type(obj))
+
+    evaluated_properties = []
+    new_obj = {}
     for key, value in obj.items():
-        if key in properties:
+        if property_names:
             try:
-                obj[key] = properties[key](value)
-                continue
-            except PropertyValueError as error:
-                raise PropertyValueError(
-                    sub_code=error.code,
-                    property_name=key + "." + error.context["property_name"],
-                    validation_error=error.context["validation_error"],
-                ) from error
+                property_names(key)
             except ValidationError as error:
-                raise PropertyValueError(property_name=key, validation_error=str(error), sub_code=error.code) from error
-            except ValueError as error:
-                raise PropertyValueError(property_name=key, validation_error=str(error)) from error
+                raise PropertyNameError(sub_code=error.code, property_name=key, validation_error=str(error)) from error
+        elif not isinstance(key, str):  # property names should by default be strings
+            raise PropertyNameError(
+                sub_code="type_error", property_name=key, validation_error=f"Expected string type, got {type(key)}"
+            )
 
-        if not additional_properties and not pattern_properties:
-            raise AdditionalPropertyError(property_name=key)
-
+        property_validator = None
         if pattern_properties:
-            property_validator: Optional[Callable] = None
-            for property_pattern, tmp_validator in pattern_properties.items():
-                if re.search(property_pattern, key):
-                    property_validator = tmp_validator
+            for name_pattern, validator in pattern_properties.items():
+                if re.search(name_pattern, key):
+                    property_validator = validator
                     break
 
-            if property_validator:
-                obj[key] = property_validator(value)
-                continue
-
-            if additional_properties is False:
-                raise AdditionalPropertyError(property_name=key)
-
-        if additional_properties is False:
+        if not property_validator and properties and key in properties:
+            property_validator = properties[key]
+        elif not property_validator and isinstance(additional_properties, Callable):
+            property_validator = additional_properties
+        elif not property_validator and additional_properties is False:
             raise AdditionalPropertyError(property_name=key)
 
-        if additional_properties is True:
-            continue
+        if property_validator:
+            new_obj[key] = _validate_property(key, value, property_validator)
+        else:
+            new_obj[key] = value
 
-        try:
-            obj[key] = additional_properties(value)  # type: ignore
-        except PropertyValueError as error:
-            raise PropertyValueError(
-                property_name=key + "." + error.context["property_name"],
-                validation_error=error.context["validation_error"],
-            ) from error
-        except ValidationError as error:
-            raise PropertyValueError(
-                property_name=key,
-                validation_error=str(error),
-                sub_code=error.code,
-            ) from error
-        except ValueError as error:
-            raise PropertyValueError(property_name=key, validation_error=str(error)) from error
+        if dependencies and key in dependencies:
+            if not all(k in obj for k in dependencies[key]):
+                raise MissingDependencyError(property=key, dependencies=dependencies[key])
 
-    return obj
+        evaluated_properties.append(key)
 
+    if min_properties >= 0 and len(evaluated_properties) < min_properties:
+        raise MinimumPropertyError(expected_minimum=min_properties)
 
-def validate_object_property_names(obj: dict, property_names: Callable) -> dict:
-    for name in obj.keys():
-        try:
-            property_names(name)
-        except ValidationError as error:
-            raise PropertyNameError(sub_code=error.code, property_name=name, validation_error=str(error)) from error
-        except ValueError as error:
-            raise PropertyNameError(sub_code="error", property_name=name, validation_error=str(error)) from error
+    if 0 <= max_properties < len(evaluated_properties):
+        raise MaximumPropertyError(expected_maximum=max_properties)
 
-    return obj
+    if required_properties:
+        missing_properties = set(required_properties) - set(evaluated_properties)
+        if missing_properties:
+            raise RequiredPropertyError(property_name=missing_properties.pop())
 
-
-def validate_object_required_properties(obj: dict, required_properties: List[str]) -> dict:
-    given_properties = obj.keys()
-    missing_properties = [key for key in required_properties if key not in given_properties]
-
-    if missing_properties:
-        raise RequiredPropertyError(property_name=missing_properties[0])
-
-    return obj
-
-
-def validate_object_minimum_properties(obj: dict, expected_minimum: int) -> dict:
-    if len(obj) < expected_minimum:
-        raise MinimumPropertyError(expected_minimum=expected_minimum)
-    return obj
-
-
-def validate_object_maximum_properties(obj: dict, expected_maximum: int) -> dict:
-    if len(obj) > expected_maximum:
-        raise MaximumPropertyError(expected_maximum=expected_maximum)
-
-    return obj
-
-
-def validate_object_dependencies(obj: dict, dependencies: Dict[str, List[str]]) -> dict:
-    for field_name, field_dependencies in dependencies.items():
-        if field_name not in obj:
-            continue
-        if not all(k in obj for k in field_dependencies):
-            raise MissingDependencyError(property=field_name, dependencies=field_dependencies)
-
-    return obj
+    return new_obj
 
 
 __all__ = [
-    "validate_object_dependencies",
-    "validate_object_maximum_properties",
-    "validate_object_minimum_properties",
-    "validate_object_properties",
-    "validate_object_property_names",
-    "validate_object_required_properties",
+    "validate_object",
 ]

@@ -127,9 +127,7 @@ from opyapi.validators import validate_string_format
         ],
     ],
 )
-def test_pass_valid_format(
-    given_string: str, given_format: str, expected_value: Any
-) -> None:
+def test_pass_valid_format(given_string: str, given_format: str, expected_value: Any) -> None:
     if expected_value is None:
         expected_value = given_string
     assert validate_string_format(given_string, given_format) == expected_value

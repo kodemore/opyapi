@@ -1,14 +1,12 @@
+from typing import Any
+
 import pytest
-from typing import Any, Callable
 
 from opyapi.errors import EnumValidationError, TypeValidationError
 from opyapi.validators import (
     validate_array,
     validate_boolean,
     validate_enum,
-    validate_integer,
-    validate_nullable,
-    validate_number,
     validate_string,
 )
 
@@ -28,10 +26,7 @@ def test_pass_validate_array(value: Any) -> None:
 def test_fail_validate_array(value: Any) -> None:
     with pytest.raises(TypeValidationError) as e:
         validate_array(value)
-    assert e.value.args[0] == (
-        "Passed value must be valid array type. "
-        f"Actual type passed was {type(value)}."
-    )
+    assert e.value.args[0] == ("Passed value must be valid array type. " f"Actual type passed was {type(value)}.")
 
 
 @pytest.mark.parametrize(
@@ -58,8 +53,7 @@ def test_fail_validate_boolean(value: Any) -> None:
     with pytest.raises(TypeValidationError) as e:
         validate_boolean(value)
     assert e.value.args[0] == (
-        "Passed value must be valid <class 'bool'> type. "
-        f"Actual type passed was {type(value)}."
+        "Passed value must be valid <class 'bool'> type. " f"Actual type passed was {type(value)}."
     )
 
 
@@ -77,86 +71,6 @@ def test_fail_validate_enum(value: Any, expected_values: list) -> None:
         validate_enum(value, expected_values)
 
 
-@pytest.mark.parametrize(
-    "value",
-    [
-        1,
-        123,
-        12453,
-    ],
-)
-def test_pass_validate_integer(value: Any) -> None:
-    assert validate_integer(value) == value
-
-
-@pytest.mark.parametrize(
-    "value",
-    [
-        True,
-        False,
-        "True",
-        "False",
-        1.2,
-    ],
-)
-def test_fail_validate_integer(value: Any) -> None:
-    with pytest.raises(TypeValidationError) as e:
-        validate_integer(value)
-    assert e.value.args[0] == (
-        "Passed value must be valid <class 'int'> type. "
-        f"Actual type passed was {type(value)}."
-    )
-
-
-@pytest.mark.parametrize(
-    "value, validator",
-    [
-        [None, validate_integer],
-        [1, validate_integer],
-        [None, validate_string],
-        ["a", validate_string],
-    ],
-)
-def test_pass_validate_nullable(value: Any, validator: Callable) -> None:
-    assert validate_nullable(value, validator) == value
-
-
-@pytest.mark.parametrize(
-    "value, validator",
-    [
-        ["a", validate_integer],
-        [False, validate_integer],
-        [1, validate_string],
-    ],
-)
-def test_fail_validate_nullable(value: Any, validator: Callable) -> None:
-    with pytest.raises(TypeValidationError) as e:
-        validate_nullable(value, validator)
-
-
-@pytest.mark.parametrize(
-    "value",
-    [
-        1,
-        123.124,
-        12453.2,
-        0,
-    ],
-)
-def test_pass_validate_number(value: Any) -> None:
-    assert validate_number(value) == value
-
-
-@pytest.mark.parametrize("value", [True, False, "True", "False", [0]])
-def test_fail_validate_number(value: Any) -> None:
-    with pytest.raises(TypeValidationError) as e:
-        validate_number(value)
-    assert e.value.args[0] == (
-        "Passed value must be valid <class 'numbers.Number'> type. "
-        f"Actual type passed was {type(value)}."
-    )
-
-
 @pytest.mark.parametrize("value", ["cat", "dog", "", "   "])
 def test_pass_validate_string(value: Any) -> None:
     assert validate_string(value) == value
@@ -167,6 +81,5 @@ def test_fail_validate_string(value: Any) -> None:
     with pytest.raises(TypeValidationError) as e:
         validate_string(value)
     assert e.value.args[0] == (
-        "Passed value must be valid <class 'str'> type. "
-        f"Actual type passed was {type(value)}."
+        "Passed value must be valid <class 'str'> type. " f"Actual type passed was {type(value)}."
     )

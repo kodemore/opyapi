@@ -1,5 +1,7 @@
 from decimal import Decimal
+from functools import partial
 from typing import Union
+from numbers import Number
 
 from opyapi.errors import (
     MaximumExclusiveRangeError,
@@ -7,9 +9,48 @@ from opyapi.errors import (
     MinimumExclusiveRangeError,
     MinimumRangeError,
     MultipleOfValidationError,
+    TypeValidationError,
 )
 
-Number = Union[int, float, Decimal]
+NumberUnion = Union[int, float, Decimal]
+
+
+def validate_number(
+    value: NumberUnion,
+    minimum: NumberUnion = None,
+    maximum: NumberUnion = None,
+    exclusive_minimum: NumberUnion = None,
+    exclusive_maximum: NumberUnion = None,
+    multiple_of: NumberUnion = None,
+    integer: bool = False,
+) -> NumberUnion:
+    if value is True or value is False:
+        raise TypeValidationError(expected_type=int if integer else Number, actual_type=type(value))
+
+    if integer is True and not isinstance(value, int):
+        raise TypeValidationError(expected_type=int, actual_type=type(value))
+    elif not isinstance(value, Number):
+        raise TypeValidationError(expected_type=Number, actual_type=type(value))
+
+    if minimum is not None:
+        validate_minimum(value, minimum)
+
+    if maximum is not None:
+        validate_maximum(value, maximum)
+
+    if exclusive_maximum is not None:
+        validate_exclusive_maximum(value, exclusive_maximum)
+
+    if exclusive_minimum is not None:
+        validate_exclusive_minimum(value, exclusive_minimum)
+
+    if multiple_of is not None:
+        validate_multiple_of(value, multiple_of)
+
+    return value
+
+
+validate_integer = partial(validate_number, integer=True)
 
 
 def validate_multiple_of(value: Number, multiple_of: Number) -> Number:
@@ -53,4 +94,6 @@ __all__ = [
     "validate_maximum",
     "validate_minimum",
     "validate_multiple_of",
+    "validate_number",
+    "validate_integer",
 ]

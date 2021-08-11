@@ -1,9 +1,29 @@
 import re
-from typing import Any
+from typing import Any, Union
 
-from opyapi.errors import FormatValidationError, MaximumLengthError, MinimumLengthError
+from opyapi.errors import FormatValidationError, MaximumLengthError, MinimumLengthError, TypeValidationError
 from opyapi.string_format import StringFormat
-from .type_validators import validate_string
+
+
+def validate_string(
+    value: Any, minimum_length: int = -1, maximum_length: int = -1, pattern: str = "", format_name: str = ""
+) -> Union[str, Any]:
+    if not isinstance(value, str):
+        raise TypeValidationError(value=value, expected_type=str, actual_type=type(value))
+
+    if minimum_length > -1:
+        validate_minimum_length(value, minimum_length)
+
+    if maximum_length > -1:
+        validate_maximum_length(value, maximum_length)
+
+    if pattern:
+        validate_string_pattern(value, pattern)
+
+    if format_name:
+        return validate_string_format(value, format_name)
+
+    return value
 
 
 def validate_minimum_length(value: str, expected_minimum: int) -> str:
@@ -39,4 +59,5 @@ __all__ = [
     "validate_minimum_length",
     "validate_string_format",
     "validate_string_pattern",
+    "validate_string",
 ]

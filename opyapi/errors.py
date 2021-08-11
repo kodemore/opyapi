@@ -34,6 +34,11 @@ class TypeValidationError(ValidationError):
     message = "Passed value must be valid {expected_type} type. " "Actual type passed was {actual_type}."
 
 
+class EqualValidationError(ValidationError):
+    code = "equal_error"
+    message = "Passed value {passed_value} does not equal {expected_value}."
+
+
 class EnumValidationError(ValidationError):
     code = "enum_error"
     message = "Passed value must be one of: {expected_values} type."
@@ -134,12 +139,16 @@ class AdditionalPropertyError(PropertyError):
     message = "Object does not expect additional properties. Property `{property_name}` is not allowed."
 
 
-class MinimumPropertyError(PropertyError):
+class ObjectSizeError(PropertyError):
+    pass
+
+
+class MinimumPropertyError(ObjectSizeError):
     code = "minimum_property_error"
     message = "The number of properties is lower than expected minimum: {expected_minimum}."
 
 
-class MaximumPropertyError(PropertyError):
+class MaximumPropertyError(ObjectSizeError):
     code = "maximum_property_error"
     message = "The number of properties is greater than expected maximum: {expected_maximum}."
 

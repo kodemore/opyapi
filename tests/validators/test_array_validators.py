@@ -1,26 +1,25 @@
 import pytest
 
+from opyapi import build_validator_for
 from opyapi.errors import (
     MaximumLengthError,
     MinimumLengthError,
     UniqueItemsValidationError,
 )
 from opyapi.validators import (
-    validate_integer,
-    validate_items,
     validate_maximum_items,
     validate_minimum_items,
-    validate_unique_items,
+    validate_array,
 )
 
 
 def test_pass_validate_unique() -> None:
-    assert validate_unique_items([1, 2, 3, 4, "true", True])
+    assert validate_array([1, 2, 3, 4, "true", True], unique_items=True)
 
 
 def test_fail_validate_unique() -> None:
     with pytest.raises(UniqueItemsValidationError):
-        validate_unique_items([1, 1])
+        validate_array([1, 1], unique_items=True)
 
 
 def test_pass_validate_minimum_items() -> None:
@@ -43,10 +42,106 @@ def test_fail_validate_maximum_items() -> None:
         assert validate_maximum_items([1, 2], 1)
 
 
-def test_pass_validate_items() -> None:
-    assert validate_items([1, 2, 3], validate_integer)
+def test_validate_array() -> None:
+    # given
+    validate = build_validator_for({"type": "array"})
 
-
-def test_fail_validate_items() -> None:
+    # then
+    validate([])
+    assert validate([1, 2, 3, 4, 5])
+    assert validate([3, "different", {"types": "of values"}])
     with pytest.raises(ValueError):
-        validate_items([1, 2.1, 3], validate_integer)
+        validate({"Not": "an array"})
+
+
+def test_validate_array_items() -> None:
+    # given
+    validate = build_validator_for({"type": "array", "items": {"type": "number"}})
+
+    # then
+    validate([])
+    assert validate([1, 2, 3, 4, 5])
+    with pytest.raises(ValueError):
+        validate([1, 2, "3", 4, 5])
+
+
+def test_validate_array_tuple() -> None:
+    # given
+    validate = build_validator_for(
+        {
+            "type": "array",
+            "items": [
+                {"type": "number"},
+                {"type": "string"},
+                {"enum": ["Street", "Avenue", "Boulevard"]},
+                {"enum": ["NW", "NE", "SW", "SE"]},
+            ],
+        }
+    )
+
+    # then
+    validate([])
+    assert validate([1600, "Pennsylvania", "Avenue", "NW"])
+    assert validate([10, "Downing", "Street"])
+    assert validate([1600, "Pennsylvania", "Avenue", "NW", "Washington"])
+    with pytest.raises(ValueError):
+        validate([24, "Sussex", "Drive"])
+    with pytest.raises(ValueError):
+        validate(["Palais de l'Élysée"])
+
+
+def test_validate_array_tuple_additional_items() -> None:
+    # given
+    validate = build_validator_for(
+        {
+            "type": "array",
+            "items": [
+                {"type": "number"},
+                {"type": "string"},
+                {"enum": ["Street", "Avenue", "Boulevard"]},
+                {"enum": ["NW", "NE", "SW", "SE"]},
+            ],
+            "additionalItems": False,
+        }
+    )
+
+    # then
+    assert validate([1600, "Pennsylvania", "Avenue", "NW"])
+    assert validate([1600, "Pennsylvania", "Avenue"])
+
+    with pytest.raises(ValueError):
+        validate([1600, "Pennsylvania", "Avenue", "NW", "Washington"])
+
+
+def test_validate_array_tuple_additional_items_2() -> None:
+    # given
+    validate = build_validator_for(
+        {
+            "type": "array",
+            "items": [
+                {"type": "number"},
+                {"type": "string"},
+                {"enum": ["Street", "Avenue", "Boulevard"]},
+                {"enum": ["NW", "NE", "SW", "SE"]},
+            ],
+            "additionalItems": {"type": "string"},
+        }
+    )
+
+    # then
+    assert validate([1600, "Pennsylvania", "Avenue", "NW", "Washington"])
+
+    with pytest.raises(ValueError):
+        validate([1600, "Pennsylvania", "Avenue", "NW", 20500])
+
+
+def test_validate_array_unique() -> None:
+    # given
+    validate = build_validator_for({"type": "array", "uniqueItems": True})
+
+    # then
+    validate([])
+    assert validate([1, 2, 3, 4, 5])
+
+    with pytest.raises(UniqueItemsValidationError):
+        validate([1, 2, 3, 3, 4])

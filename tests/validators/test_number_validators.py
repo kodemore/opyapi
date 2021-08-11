@@ -3,12 +3,15 @@ from typing import Union
 
 import pytest
 
+from opyapi import build_validator_for
 from opyapi.errors import (
     MaximumExclusiveRangeError,
     MaximumRangeError,
     MinimumExclusiveRangeError,
     MinimumRangeError,
     MultipleOfValidationError,
+    TypeValidationError,
+    RangeValidationError,
 )
 from opyapi.validators import (
     validate_exclusive_maximum,
@@ -130,9 +133,7 @@ def test_fail_validate_exclusive_minimum(value: int, expected_minimum: int) -> N
         [4.4, 2.2],
     ],
 )
-def test_pass_validate_multiple_of(
-    value: Union[int, float, Decimal], multiple_of: Union[int, float, Decimal]
-) -> None:
+def test_pass_validate_multiple_of(value: Union[int, float, Decimal], multiple_of: Union[int, float, Decimal]) -> None:
     assert validate_multiple_of(value, multiple_of)
 
 
@@ -148,8 +149,64 @@ def test_pass_validate_multiple_of(
         [3.4, 2.2],
     ],
 )
-def test_fail_validate_multiple_of(
-    value: Union[int, float, Decimal], multiple_of: Union[int, float, Decimal]
-) -> None:
+def test_fail_validate_multiple_of(value: Union[int, float, Decimal], multiple_of: Union[int, float, Decimal]) -> None:
     with pytest.raises(MultipleOfValidationError):
         validate_multiple_of(value, multiple_of)
+
+
+def test_number_validator() -> None:
+    # given
+    validate = build_validator_for({"type": "integer"})
+
+    # then
+    assert validate(1)
+    with pytest.raises(TypeValidationError) as e:
+        validate(5.0)
+    assert e.value.args[0] == (
+        "Passed value must be valid <class 'int'> type. " "Actual type passed was <class 'float'>."
+    )
+
+
+def test_number_validator_with_minimum() -> None:
+    # given
+    validate = build_validator_for({"type": "integer", "minimum": 5})
+
+    # then
+    assert validate(5)
+    with pytest.raises(RangeValidationError):
+        validate(4)
+
+
+def test_number_validator_with_maximum() -> None:
+    # given
+    validate = build_validator_for({"type": "integer", "maximum": 5})
+
+    # then
+    assert validate(5)
+    with pytest.raises(RangeValidationError):
+        validate(6)
+
+
+def test_number_validator_with_multiple_of() -> None:
+    # given
+    validate = build_validator_for({"type": "integer", "multipleOf": 5})
+
+    # then
+    assert validate(5)
+    with pytest.raises(MultipleOfValidationError):
+        validate(6)
+
+
+def test_number_validator_minimum_maximum() -> None:
+    # given
+    validate = build_validator_for({"type": "integer", "minimum": 2, "maximum": 5})
+
+    # then
+    assert validate(2)
+    assert validate(3)
+    assert validate(4)
+    assert validate(5)
+    with pytest.raises(RangeValidationError):
+        validate(1)
+    with pytest.raises(RangeValidationError):
+        validate(6)

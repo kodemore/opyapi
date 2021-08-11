@@ -1,7 +1,7 @@
 from typing import Any, Dict, List, Union
 
-from opyapi.json_schema import JsonReference
-from opyapi.openapi_schema import OpenApiSchema
+from opyapi.json_schema import JsonReference, JsonUri
+from opyapi.json_schema import JsonSchema
 
 
 class AstTypeNode:
@@ -53,24 +53,23 @@ class AstClassNode:
 
 
 class SchemaProcessor:
-    def __init__(self, schema: OpenApiSchema):
+    def __init__(self, schema: JsonSchema):
         self.schema = schema
         self.components = self.schema.query("/components/schemas")
-        self._processed_classes: Dict[str, AstClassNode] = {}
+        self._processed_classes: Dict[JsonUri, AstClassNode] = {}
 
-    def process(self) -> Dict[str, AstClassNode]:
+    def process(self) -> Dict[JsonUri, AstClassNode]:
         for name, schema in self.components.items():
-            ref = f"{self.schema.file_name}#/components/schemas/{name}"
-            self._process_class_node(ref, schema)
+            self._process_class_node(str(self.schema.id + f"#/components/schemas/{name}"), schema)
 
         return self._processed_classes
 
-    def _process_class_node(self, ref: str, schema: Union[JsonReference, dict]) -> AstClassNode:
-        if ref in self._processed_classes:
-            return self._processed_classes[ref]
+    def _process_class_node(self, uri: str, schema: Union[JsonReference, dict]) -> AstClassNode:
+        if uri in self._processed_classes:
+            return self._processed_classes[uri]
 
-        class_node = AstClassNode(ref)
-        self._processed_classes[ref] = class_node
+        class_node = AstClassNode(uri)
+        self._processed_classes[uri] = class_node
 
         if "properties" in schema:
             self._process_properties_nodes(class_node, schema)
@@ -78,7 +77,7 @@ class SchemaProcessor:
         if "allOf" in schema:
             for sub_schema in schema["allOf"]:
                 if isinstance(sub_schema, JsonReference):
-                    class_node.parent_classes.append(self._process_class_node(sub_schema.id, sub_schema.data))
+                    class_node.parent_classes.append(self._process_class_node(str(sub_schema.uri), sub_schema.document))
 
                     continue
 
@@ -86,7 +85,7 @@ class SchemaProcessor:
                     self._process_properties_nodes(class_node, sub_schema)
                     continue
 
-                raise RuntimeError(f"Unexpected value inside component {ref}.allOf")
+                raise RuntimeError(f"Unexpected value inside component {uri}.allOf")
 
         return class_node
 
@@ -108,7 +107,7 @@ class SchemaProcessor:
 
     def _process_type_node(self, schema: Union[JsonReference, Dict[str, Any]]) -> AstTypeNode:
         if isinstance(schema, JsonReference):
-            return AstReferenceTypeNode(self._process_class_node(schema.id, schema))
+            return AstReferenceTypeNode(self._process_class_node(str(schema.uri), schema))
 
         if "type" not in schema:
             return AstTypeNode("str")
