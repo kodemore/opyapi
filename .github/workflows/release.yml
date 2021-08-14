@@ -29,8 +29,8 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v1
         with:
-          name: chocs-middleware-parsed-body-${{ steps.tag.outputs.tag }}.tar.gz
-          path: dist/chocs_middleware.parsed_body-${{ steps.tag.outputs.tag }}.tar.gz
+          name: opyapi-${{ steps.tag.outputs.tag }}.tar.gz
+          path: dist/opyapi-${{ steps.tag.outputs.tag }}.tar.gz
       - name: Publish release
         env:
           POETRY_PYPI_TOKEN_PYPI: ${{ secrets.PYPI_TOKEN }}
