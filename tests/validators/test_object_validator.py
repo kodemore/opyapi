@@ -1,11 +1,11 @@
 import pytest
 
 from opyapi.errors import (
-    AdditionalPropertyError,
-    PropertyValueError,
-    RequiredPropertyError,
-    PropertyNameError,
-    ObjectSizeError,
+    AdditionalPropertiesValidationError,
+    PropertyValueValidationError,
+    RequiredPropertyValidationError,
+    PropertyNameValidationError,
+    ObjectSizeValidationError,
 )
 from opyapi import build_validator_for
 
@@ -79,7 +79,7 @@ def test_validate_object_additional_properties() -> None:
 
     # then
     assert validate({"number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue"})
-    with pytest.raises(AdditionalPropertyError):
+    with pytest.raises(AdditionalPropertiesValidationError):
         validate({"number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue", "direction": "NW"})
 
 
@@ -100,7 +100,7 @@ def test_validate_object_additional_properties_with_validator() -> None:
     # then
     assert validate({"number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue"})
     assert validate({"number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue", "direction": "NW"})
-    with pytest.raises(PropertyValueError):
+    with pytest.raises(PropertyValueValidationError):
         validate({"number": 1600, "street_name": "Pennsylvania", "street_type": "Avenue", "office_number": 201})
 
 
@@ -118,7 +118,7 @@ def test_validate_object_additional_properties_with_pattern_properties() -> None
     # then
     assert validate({"builtin": 42})
     assert validate({"keyword": "value"})
-    with pytest.raises(PropertyValueError):
+    with pytest.raises(PropertyValueValidationError):
         validate({"keyword": 42})
 
 
@@ -147,7 +147,7 @@ def test_validate_object_required_properties() -> None:
             "authorship": "in question",
         }
     )
-    with pytest.raises(RequiredPropertyError):
+    with pytest.raises(RequiredPropertyValidationError):
         validate(
             {
                 "name": "William Shakespeare",
@@ -155,7 +155,7 @@ def test_validate_object_required_properties() -> None:
             }
         )
 
-    with pytest.raises(PropertyValueError):
+    with pytest.raises(PropertyValueValidationError):
         validate(
             {
                 "name": "William Shakespeare",
@@ -171,7 +171,7 @@ def test_validate_object_property_names() -> None:
 
     # then
     assert validate({"_a_proper_token_001": "value"})
-    with pytest.raises(PropertyNameError):
+    with pytest.raises(PropertyNameValidationError):
         validate({"001 invalid": "value"})
 
 
@@ -182,11 +182,11 @@ def test_validate_object_size() -> None:
     # then
     assert validate({"a": 0, "b": 1})
     assert validate({"a": 0, "b": 1, "c": 2})
-    with pytest.raises(ObjectSizeError):
+    with pytest.raises(ObjectSizeValidationError):
         validate({})
-    with pytest.raises(ObjectSizeError):
+    with pytest.raises(ObjectSizeValidationError):
         validate({"a": 0})
-    with pytest.raises(ObjectSizeError):
+    with pytest.raises(ObjectSizeValidationError):
         validate({"a": 0, "b": 1, "c": 2, "d": 3})
 
 

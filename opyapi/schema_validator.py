@@ -1,8 +1,8 @@
-from functools import partial
+from functools import partial, lru_cache
 from typing import Any, Callable, Dict, List, Union
 
 from opyapi.json_schema import JsonSchema
-from opyapi.errors import ValidationError, AdditionalItemsError
+from opyapi.errors import ValidationError, AdditionalItemsValidationError
 from opyapi.validators import validate_equal
 from opyapi.validators.array_validators import (
     validate_array,
@@ -277,7 +277,7 @@ def _build_tuple_validator(definition: Dict[str, Any]) -> Callable:
         if definition["additionalItems"] is True:
             validator = partial(validator, additional_items=lambda x: x)
         elif definition["additionalItems"] is False:
-            validator = partial(validator, additional_items=partial(_fail, error=AdditionalItemsError()))
+            validator = partial(validator, additional_items=partial(_fail, error=AdditionalItemsValidationError()))
         elif isinstance(definition["additionalItems"], dict):
             validator = partial(validator, additional_items=build_validator_for(definition["additionalItems"]))
     else:

@@ -1,6 +1,6 @@
 from typing import Any, List, Union, Callable
 
-from opyapi.errors import EqualValidationError, TypeValidationError, EnumValidationError
+from opyapi.errors import EqualityValidationError, TypeValidationError, EnumValidationError
 from .array_validators import (
     validate_maximum_items,
     validate_minimum_items,
@@ -37,7 +37,7 @@ def validate_equal(value: Any, expected: Any) -> Any:
     if value == expected:
         return value
 
-    raise EqualValidationError(passed_value=value, expected_value=value)
+    raise EqualityValidationError(passed_value=value, expected_value=value)
 
 
 def validate_boolean(value: Any) -> bool:

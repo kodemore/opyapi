@@ -2,8 +2,8 @@ import pytest
 
 from opyapi import build_validator_for
 from opyapi.errors import (
-    MaximumLengthError,
-    MinimumLengthError,
+    MaximumItemsValidationError,
+    MinimumItemsValidationError,
     UniqueItemsValidationError,
 )
 from opyapi.validators import (
@@ -28,7 +28,7 @@ def test_pass_validate_minimum_items() -> None:
 
 
 def test_fail_validate_minimum_items() -> None:
-    with pytest.raises(MinimumLengthError):
+    with pytest.raises(MinimumItemsValidationError):
         assert validate_minimum_items([1], 2)
 
 
@@ -38,7 +38,7 @@ def test_pass_validate_maximum_items() -> None:
 
 
 def test_fail_validate_maximum_items() -> None:
-    with pytest.raises(MaximumLengthError):
+    with pytest.raises(MaximumItemsValidationError):
         assert validate_maximum_items([1, 2], 1)
 
 

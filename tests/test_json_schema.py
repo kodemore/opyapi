@@ -1,3 +1,5 @@
+import cProfile
+import time
 from os import path
 
 from opyapi import build_validator_for
@@ -62,7 +64,6 @@ def test_can_build_validator_for_complex_schema() -> None:
     test_file = path.join(path.dirname(__file__), "fixtures/openapi.yml")
     schema = JsonSchema.from_file(openapi_schema)
     validate = build_validator_for(schema)
-
     validate(yaml.full_load(open(test_file)))
 
 

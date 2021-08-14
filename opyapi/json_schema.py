@@ -1,6 +1,6 @@
 import re
 from abc import abstractmethod
-from functools import cached_property
+from functools import cached_property, lru_cache
 from json import load as load_json
 from os import path
 from typing import Any, Dict, Optional, Union, List, Set, ItemsView, KeysView, ValuesView
@@ -155,7 +155,11 @@ class JsonReference:
 
     @cached_property
     def document(self) -> Union[List, Dict]:
-        doc_fragment = JsonSchemaStore.get(self.uri).query(self.uri.fragment)
+        if self.uri.source == self.owner.id.source:
+            doc_fragment = self.owner.query(self.uri.fragment)
+        else:
+            doc_fragment = JsonSchemaStore.get(self.uri).query(self.uri.fragment)
+
         if isinstance(doc_fragment, JsonReference):
             doc_fragment = doc_fragment.document
         if isinstance(doc_fragment, dict):
@@ -197,7 +201,7 @@ class JsonSchema:
         self._document = document
         self._ready = False
         self._current_path = []
-        self.dynamic_anchors: Dict[str, str] = {}
+        self.anchors: Dict[str, str] = {}
         self._query_cache = {}
 
     @classmethod
@@ -223,6 +227,7 @@ class JsonSchema:
             self._id = JsonUri(document["$id"])
             if self._id.fragment:
                 raise ValueError("$id property of schema cannot contain reference to a fragment document.")
+            del document["$id"]
 
         if not JsonSchemaStore.has(self._id):
             JsonSchemaStore.add(self._id, self)
@@ -240,8 +245,12 @@ class JsonSchema:
 
         elif isinstance(node, dict):
             if "$dynamicAnchor" in node:
-                self.dynamic_anchors["#" + node["$dynamicAnchor"]] = "#/" + "/".join(self._current_path)
+                self.anchors[f"#{node['$dynamicAnchor']}"] = "#/" + "/".join(self._current_path)
                 del node["$dynamicAnchor"]
+
+            if "$anchor" in node:
+                self.anchors[f"#{node['$anchor']}"] = "#/" + "/".join(self._current_path)
+                del node["$anchor"]
 
             if "$ref" in node and isinstance(node["$ref"], str):
                 ref = self._id + node["$ref"]
@@ -286,7 +295,11 @@ class JsonSchema:
     def dump(self) -> Dict:
         return dump(self)
 
+    @lru_cache(maxsize=256)
     def query(self, query: str) -> Any:
+        if query in self.anchors:
+            query = self.anchors[query]
+
         query_parts = query.replace("\\/", "&slash;")
         query_parts = [part.replace("&slash;", "/") for part in query_parts.lstrip("#").strip("/").split("/")]
         fragment = self.document
@@ -428,6 +441,5 @@ __all__ = [
     "URILoader",
     "JsonSchemaStore",
     "JsonSchema",
-    "DynamicJsonReference",
     "dump",
 ]

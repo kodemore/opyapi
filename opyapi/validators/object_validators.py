@@ -2,35 +2,35 @@ import re
 from typing import Callable, Dict, List, Union, Any
 
 from opyapi.errors import (
-    AdditionalPropertyError,
-    MaximumPropertyError,
-    MinimumPropertyError,
-    MissingDependencyError,
-    PropertyValueError,
-    RequiredPropertyError,
+    AdditionalPropertiesValidationError,
+    MaximumPropertiesValidationError,
+    MinimumPropertiesValidationError,
+    DependencyValidationError,
+    PropertyValueValidationError,
+    RequiredPropertyValidationError,
     ValidationError,
     TypeValidationError,
-    PropertyNameError,
+    PropertyNameValidationError,
 )
 
 
 def _validate_property(key: str, value: Any, validator: Callable) -> Any:
     try:
         return validator(value)
-    except PropertyValueError as error:
-        raise PropertyValueError(
+    except PropertyValueValidationError as error:
+        raise PropertyValueValidationError(
             property_name=key + "." + error.context["property_name"],
             validation_error=error.context["validation_error"],
             sub_code=error.code,
         ) from error
     except ValidationError as error:
-        raise PropertyValueError(
+        raise PropertyValueValidationError(
             property_name=key,
             validation_error=str(error),
             sub_code=error.code,
         ) from error
     except ValueError as error:
-        raise PropertyValueError(property_name=key, validation_error=str(error), sub_code="value_error") from error
+        raise PropertyValueValidationError(property_name=key, validation_error=str(error), sub_code="value_error") from error
 
 
 def validate_object(
@@ -54,9 +54,9 @@ def validate_object(
             try:
                 property_names(key)
             except ValidationError as error:
-                raise PropertyNameError(sub_code=error.code, property_name=key, validation_error=str(error)) from error
+                raise PropertyNameValidationError(sub_code=error.code, property_name=key, validation_error=str(error)) from error
         elif not isinstance(key, str):  # property names should by default be strings
-            raise PropertyNameError(
+            raise PropertyNameValidationError(
                 sub_code="type_error", property_name=key, validation_error=f"Expected string type, got {type(key)}"
             )
 
@@ -72,7 +72,7 @@ def validate_object(
         elif not property_validator and isinstance(additional_properties, Callable):
             property_validator = additional_properties
         elif not property_validator and additional_properties is False:
-            raise AdditionalPropertyError(property_name=key)
+            raise AdditionalPropertiesValidationError(property_name=key)
 
         if property_validator:
             new_obj[key] = _validate_property(key, value, property_validator)
@@ -81,20 +81,20 @@ def validate_object(
 
         if dependencies and key in dependencies:
             if not all(k in obj for k in dependencies[key]):
-                raise MissingDependencyError(property=key, dependencies=dependencies[key])
+                raise DependencyValidationError(property=key, dependencies=dependencies[key])
 
         evaluated_properties.append(key)
 
     if min_properties >= 0 and len(evaluated_properties) < min_properties:
-        raise MinimumPropertyError(expected_minimum=min_properties)
+        raise MinimumPropertiesValidationError(expected_minimum=min_properties)
 
     if 0 <= max_properties < len(evaluated_properties):
-        raise MaximumPropertyError(expected_maximum=max_properties)
+        raise MaximumPropertiesValidationError(expected_maximum=max_properties)
 
     if required_properties:
         missing_properties = set(required_properties) - set(evaluated_properties)
         if missing_properties:
-            raise RequiredPropertyError(property_name=missing_properties.pop())
+            raise RequiredPropertyValidationError(property_name=missing_properties.pop())
 
     return new_obj
 

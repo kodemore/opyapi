@@ -3,9 +3,9 @@ import pytest
 from opyapi import build_validator_for
 from opyapi.errors import (
     FormatValidationError,
-    MaximumLengthError,
-    MinimumLengthError,
-    LengthValidationError,
+    MaximumItemsValidationError,
+    MinimumItemsValidationError,
+    ItemsValidationError,
 )
 from opyapi.validators import (
     validate_maximum_length,
@@ -44,7 +44,7 @@ def test_pass_validate_minimum_length(value: str, expected_minimum: int) -> None
     ],
 )
 def test_fail_validate_minimum_length(value: str, expected_minimum: int) -> None:
-    with pytest.raises(MinimumLengthError):
+    with pytest.raises(MinimumItemsValidationError):
         validate_minimum_length(value, expected_minimum)
 
 
@@ -61,7 +61,7 @@ def test_pass_validate_maximum_length(value: str, expected_maximum: int) -> None
     ],
 )
 def test_fail_validate_maximum_length(value: str, expected_maximum: int) -> None:
-    with pytest.raises(MaximumLengthError):
+    with pytest.raises(MaximumItemsValidationError):
         validate_maximum_length(value, expected_maximum)
 
 
@@ -85,9 +85,9 @@ def test_validate_string_length() -> None:
     # then
     assert validate("AB")
     assert validate("ABC")
-    with pytest.raises(LengthValidationError):
+    with pytest.raises(ItemsValidationError):
         validate("A")
-    with pytest.raises(LengthValidationError):
+    with pytest.raises(ItemsValidationError):
         validate("ABCD")
 
 

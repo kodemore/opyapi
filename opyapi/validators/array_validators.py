@@ -1,9 +1,9 @@
 from typing import Callable, List
 
 from opyapi.errors import (
-    AdditionalItemsError,
-    MaximumLengthError,
-    MinimumLengthError,
+    AdditionalItemsValidationError,
+    MaximumItemsValidationError,
+    MinimumItemsValidationError,
     UniqueItemsValidationError,
     TypeValidationError,
 )
@@ -13,14 +13,14 @@ def validate_minimum_items(value: list, expected_minimum: int) -> list:
     if len(value) >= expected_minimum:
         return value
 
-    raise MinimumLengthError(expected_minimum=expected_minimum)
+    raise MinimumItemsValidationError(expected_minimum=expected_minimum)
 
 
 def validate_maximum_items(value: list, expected_maximum: int) -> list:
     if len(value) <= expected_maximum:
         return value
 
-    raise MaximumLengthError(expected_maximum=expected_maximum)
+    raise MaximumItemsValidationError(expected_maximum=expected_maximum)
 
 
 def validate_tuple(value: list, item_validator: List[Callable], additional_items: Callable = None) -> list:
@@ -31,7 +31,7 @@ def validate_tuple(value: list, item_validator: List[Callable], additional_items
     validators_length = len(item_validator)
 
     if list_length > validators_length and additional_items is None:
-        raise AdditionalItemsError()
+        raise AdditionalItemsValidationError()
 
     for i in range(0, list_length):
         if i < validators_length:

@@ -4,10 +4,10 @@ from typing import Union
 from numbers import Number
 
 from opyapi.errors import (
-    MaximumExclusiveRangeError,
-    MaximumRangeError,
-    MinimumExclusiveRangeError,
-    MinimumRangeError,
+    ExclusiveMaximumValidationError,
+    MaximumValidationError,
+    ExclusiveMinimumValidationError,
+    MinimumValidationError,
     MultipleOfValidationError,
     TypeValidationError,
 )
@@ -64,28 +64,28 @@ def validate_minimum(value: Number, expected_minimum: Number) -> Number:
     if value >= expected_minimum:
         return value
 
-    raise MinimumRangeError(expected_minimum=expected_minimum)
+    raise MinimumValidationError(expected_minimum=expected_minimum)
 
 
 def validate_exclusive_minimum(value: Number, expected_minimum: Number) -> Number:
     if value > expected_minimum:
         return value
 
-    raise MinimumExclusiveRangeError(expected_minimum=expected_minimum)
+    raise ExclusiveMinimumValidationError(expected_minimum=expected_minimum)
 
 
 def validate_maximum(value: Number, expected_maximum: Number) -> Number:
     if value <= expected_maximum:
         return value
 
-    raise MaximumRangeError(expected_maximum=expected_maximum)
+    raise MaximumValidationError(expected_maximum=expected_maximum)
 
 
 def validate_exclusive_maximum(value: Number, expected_maximum: Number) -> Number:
     if value < expected_maximum:
         return value
 
-    raise MaximumExclusiveRangeError(expected_maximum=expected_maximum)
+    raise ExclusiveMaximumValidationError(expected_maximum=expected_maximum)
 
 
 __all__ = [

@@ -5,10 +5,10 @@ import pytest
 
 from opyapi import build_validator_for
 from opyapi.errors import (
-    MaximumExclusiveRangeError,
-    MaximumRangeError,
-    MinimumExclusiveRangeError,
-    MinimumRangeError,
+    ExclusiveMaximumValidationError,
+    MaximumValidationError,
+    ExclusiveMinimumValidationError,
+    MinimumValidationError,
     MultipleOfValidationError,
     TypeValidationError,
     RangeValidationError,
@@ -37,7 +37,7 @@ def test_pass_validate_minimum(value: int, expected_minimum: int) -> None:
 
 @pytest.mark.parametrize("value, expected_minimum", [[0, 1], [1, 3], [1.1, 2]])
 def test_fail_validate_minimum(value: int, expected_minimum: int) -> None:
-    with pytest.raises(MinimumRangeError):
+    with pytest.raises(MinimumValidationError):
         validate_minimum(value, expected_minimum)
 
 
@@ -64,7 +64,7 @@ def test_pass_validate_maximum(value: int, expected_maximum: int) -> None:
     ],
 )
 def test_fail_validate_maximum(value: int, expected_maximum: int) -> None:
-    with pytest.raises(MaximumRangeError):
+    with pytest.raises(MaximumValidationError):
         validate_maximum(value, expected_maximum)
 
 
@@ -91,7 +91,7 @@ def test_pass_validate_exclusive_maximum(value: int, expected_maximum: int) -> N
     ],
 )
 def test_fail_validate_exclusive_maximum(value: int, expected_maximum: int) -> None:
-    with pytest.raises(MaximumExclusiveRangeError):
+    with pytest.raises(ExclusiveMaximumValidationError):
         validate_exclusive_maximum(value, expected_maximum)
 
 
@@ -117,7 +117,7 @@ def test_pass_validate_exclusive_minimum(value: int, expected_minimum: int) -> N
     ],
 )
 def test_fail_validate_exclusive_minimum(value: int, expected_minimum: int) -> None:
-    with pytest.raises(MinimumExclusiveRangeError):
+    with pytest.raises(ExclusiveMinimumValidationError):
         validate_exclusive_minimum(value, expected_minimum)
 
 
