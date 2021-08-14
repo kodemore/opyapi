@@ -1,4 +1,4 @@
-from typing import Callable, List
+from typing import Callable, List, Any
 
 from opyapi.errors import (
     AdditionalItemsValidationError,
@@ -62,7 +62,7 @@ def validate_array(
 
     # python fails to check in sets against bool and integers so we have to run this in two loops
     if unique_items:
-        seen = []
+        seen: List[Any] = []
         for item in result:
             for other in seen:
                 if item is other:

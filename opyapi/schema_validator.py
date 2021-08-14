@@ -97,11 +97,13 @@ def _detect_schema_type(definition: Dict[str, Any]) -> str:
     return ""
 
 
-def build_validator_for(schema: Union[JsonSchema, Dict[str, Any], bool]) -> Callable:
-    if schema is True:
+def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> Callable:
+    if any_schema is True:
         return lambda value: value
-    if schema is False:
+    if any_schema is False:
         return partial(_fail, error=ValidationError("Could not validate {value}."))
+
+    schema: Dict[str, Any] = any_schema  # type: ignore
 
     root_validators = []
     if "type" in schema:

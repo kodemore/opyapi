@@ -30,7 +30,9 @@ def _validate_property(key: str, value: Any, validator: Callable) -> Any:
             sub_code=error.code,
         ) from error
     except ValueError as error:
-        raise PropertyValueValidationError(property_name=key, validation_error=str(error), sub_code="value_error") from error
+        raise PropertyValueValidationError(
+            property_name=key, validation_error=str(error), sub_code="value_error"
+        ) from error
 
 
 def validate_object(
@@ -54,7 +56,9 @@ def validate_object(
             try:
                 property_names(key)
             except ValidationError as error:
-                raise PropertyNameValidationError(sub_code=error.code, property_name=key, validation_error=str(error)) from error
+                raise PropertyNameValidationError(
+                    sub_code=error.code, property_name=key, validation_error=str(error)
+                ) from error
         elif not isinstance(key, str):  # property names should by default be strings
             raise PropertyNameValidationError(
                 sub_code="type_error", property_name=key, validation_error=f"Expected string type, got {type(key)}"
@@ -69,7 +73,7 @@ def validate_object(
 
         if not property_validator and properties and key in properties:
             property_validator = properties[key]
-        elif not property_validator and isinstance(additional_properties, Callable):
+        elif not property_validator and callable(additional_properties):
             property_validator = additional_properties
         elif not property_validator and additional_properties is False:
             raise AdditionalPropertiesValidationError(property_name=key)

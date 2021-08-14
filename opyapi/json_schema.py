@@ -39,17 +39,17 @@ class JsonUri:
             return result
 
         matched = re.match(JSON_URI_PARTIAL_REGEX, other, re.IGNORECASE)
-        result._fragment = matched.group("fragment")
+        result._fragment = matched.group("fragment")  # type: ignore
 
-        if matched.group("protocol"):
-            result.protocol = matched.group("protocol")
-            result.path = matched.group("path")
+        if matched.group("protocol"):  # type: ignore
+            result.protocol = matched.group("protocol")  # type: ignore
+            result.path = matched.group("path")  # type: ignore
             return result
 
-        new_path = matched.group("path")
+        new_path = matched.group("path")  # type: ignore
         if new_path.startswith("/"):
-            result.path = matched.group("path")
-            result._fragment = matched.group("fragment")
+            result.path = matched.group("path")  # type: ignore
+            result._fragment = matched.group("fragment")  # type: ignore
 
             return result
 
@@ -145,7 +145,7 @@ class JsonReference:
         return item in self.document
 
     def __getitem__(self, key: str):
-        return self.document.__getitem__(key)
+        return self.document.__getitem__(key)  # type: ignore
 
     def get(self, key: str, default: Any = None) -> Any:
         if key not in self:
@@ -170,13 +170,13 @@ class JsonReference:
         return self._document
 
     def items(self) -> ItemsView:
-        return self.document.items()
+        return self.document.items()  # type: ignore
 
     def keys(self) -> KeysView:
-        return self.document.keys()
+        return self.document.keys()  # type: ignore
 
     def values(self) -> ValuesView:
-        return self.document.values()
+        return self.document.values()  # type: ignore
 
     def __repr__(self) -> str:
         return f"JsonReference({str(self.uri)})"
@@ -200,9 +200,8 @@ class JsonSchema:
         self._id = id_
         self._document = document
         self._ready = False
-        self._current_path = []
+        self._current_path: List[Union[str, int]] = []
         self.anchors: Dict[str, str] = {}
-        self._query_cache = {}
 
     @classmethod
     def from_file(cls, file_name: str) -> "JsonSchema":
@@ -245,22 +244,22 @@ class JsonSchema:
 
         elif isinstance(node, dict):
             if "$dynamicAnchor" in node:
-                self.anchors[f"#{node['$dynamicAnchor']}"] = "#/" + "/".join(self._current_path)
+                self.anchors[f"#{node['$dynamicAnchor']}"] = "#/" + "/".join([str(i) for i in self._current_path])
                 del node["$dynamicAnchor"]
 
             if "$anchor" in node:
-                self.anchors[f"#{node['$anchor']}"] = "#/" + "/".join(self._current_path)
+                self.anchors[f"#{node['$anchor']}"] = "#/" + "/".join([str(i) for i in self._current_path])
                 del node["$anchor"]
 
             if "$ref" in node and isinstance(node["$ref"], str):
                 ref = self._id + node["$ref"]
                 del node["$ref"]
                 if node:
-                    result = JsonReference(
+                    result = JsonReference(  # type: ignore
                         self, ref, {key: self._process_node(value, key) for key, value in node.items()}
                     )
                 else:
-                    result = JsonReference(self, ref)
+                    result = JsonReference(self, ref)  # type: ignore
 
                 self._current_path.pop()
                 return result
@@ -269,16 +268,16 @@ class JsonSchema:
                 dynamic_ref = self._id + node["$dynamicRef"]
                 del node["$dynamicRef"]
                 if node:
-                    result = JsonReference(
+                    result = JsonReference(  # type: ignore
                         self, dynamic_ref, {key: self._process_node(value, key) for key, value in node.items()}
                     )
                 else:
-                    result = JsonReference(self, dynamic_ref)
+                    result = JsonReference(self, dynamic_ref)  # type: ignore
 
                 self._current_path.pop()
                 return result
 
-            result = {key: self._process_node(value, key) for key, value in node.items()}
+            result = {key: self._process_node(value, key) for key, value in node.items()}  # type: ignore
             self._current_path.pop()
             return result
 
@@ -301,7 +300,7 @@ class JsonSchema:
             query = self.anchors[query]
 
         query_parts = query.replace("\\/", "&slash;")
-        query_parts = [part.replace("&slash;", "/") for part in query_parts.lstrip("#").strip("/").split("/")]
+        query_parts = [part.replace("&slash;", "/") for part in query_parts.lstrip("#").strip("/").split("/")]  # type: ignore
         fragment = self.document
 
         for item in query_parts:

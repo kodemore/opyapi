@@ -53,35 +53,35 @@ def validate_number(
 validate_integer = partial(validate_number, integer=True)
 
 
-def validate_multiple_of(value: Number, multiple_of: Number) -> Number:
+def validate_multiple_of(value: NumberUnion, multiple_of: NumberUnion) -> NumberUnion:
     if not value % multiple_of == 0:  # type: ignore
         raise MultipleOfValidationError(multiple_of=multiple_of)
 
     return value
 
 
-def validate_minimum(value: Number, expected_minimum: Number) -> Number:
+def validate_minimum(value: NumberUnion, expected_minimum: NumberUnion) -> NumberUnion:
     if value >= expected_minimum:
         return value
 
     raise MinimumValidationError(expected_minimum=expected_minimum)
 
 
-def validate_exclusive_minimum(value: Number, expected_minimum: Number) -> Number:
+def validate_exclusive_minimum(value: NumberUnion, expected_minimum: NumberUnion) -> NumberUnion:
     if value > expected_minimum:
         return value
 
     raise ExclusiveMinimumValidationError(expected_minimum=expected_minimum)
 
 
-def validate_maximum(value: Number, expected_maximum: Number) -> Number:
+def validate_maximum(value: NumberUnion, expected_maximum: NumberUnion) -> NumberUnion:
     if value <= expected_maximum:
         return value
 
     raise MaximumValidationError(expected_maximum=expected_maximum)
 
 
-def validate_exclusive_maximum(value: Number, expected_maximum: Number) -> Number:
+def validate_exclusive_maximum(value: NumberUnion, expected_maximum: NumberUnion) -> NumberUnion:
     if value < expected_maximum:
         return value
 

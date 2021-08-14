@@ -56,15 +56,15 @@ class SchemaProcessor:
     def __init__(self, schema: JsonSchema):
         self.schema = schema
         self.components = self.schema.query("/components/schemas")
-        self._processed_classes: Dict[JsonUri, AstClassNode] = {}
+        self._processed_classes: Dict[str, AstClassNode] = {}
 
-    def process(self) -> Dict[JsonUri, AstClassNode]:
+    def process(self) -> Dict[str, AstClassNode]:
         for name, schema in self.components.items():
             self._process_class_node(str(self.schema.id + f"#/components/schemas/{name}"), schema)
 
         return self._processed_classes
 
-    def _process_class_node(self, uri: str, schema: Union[JsonReference, dict]) -> AstClassNode:
+    def _process_class_node(self, uri: str, schema: Union[JsonReference, Dict, Any]) -> AstClassNode:
         if uri in self._processed_classes:
             return self._processed_classes[uri]
 

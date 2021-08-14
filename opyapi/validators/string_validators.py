@@ -1,7 +1,12 @@
 import re
 from typing import Any, Union
 
-from opyapi.errors import FormatValidationError, MaximumItemsValidationError, MinimumItemsValidationError, TypeValidationError
+from opyapi.errors import (
+    FormatValidationError,
+    MaximumItemsValidationError,
+    MinimumItemsValidationError,
+    TypeValidationError,
+)
 from opyapi.string_format import StringFormat
 
 
