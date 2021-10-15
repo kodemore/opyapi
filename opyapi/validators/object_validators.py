@@ -45,8 +45,11 @@ def validate_object(
     additional_properties: Union[bool, Callable] = True,
     property_names: Callable = None,
     dependencies: Dict[str, List[str]] = None,
+    strict: bool = True,
 ) -> dict:
     if not isinstance(obj, dict):
+        if not strict:
+            return obj
         raise TypeValidationError(expected_type="object", actual_type=type(obj))
 
     evaluated_properties = []

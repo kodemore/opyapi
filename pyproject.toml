@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "opyapi"
-version = "1.0.0"
+version = "1.1.0"
 description = "JsonSchem and OpenAPI tools for python."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"

@@ -40,11 +40,14 @@ def validate_equal(value: Any, expected: Any) -> Any:
     raise EqualityValidationError(passed_value=value, expected_value=value)
 
 
-def validate_boolean(value: Any) -> bool:
+def validate_boolean(value: Any, strict: bool = True) -> bool:
     if value is True or value is False:
         return value
 
-    raise TypeValidationError(expected_type=bool, actual_type=type(value))
+    if strict:
+        raise TypeValidationError(expected_type=bool, actual_type=type(value))
+
+    return value
 
 
 def validate_enum(value: Any, values: List[Union[str, int, float, bool]]) -> Union[str, int, float, bool]:
@@ -66,12 +69,23 @@ def validate_nullable(value: Any, validator: Callable) -> Any:
     return validator(value)
 
 
+def validate_null(value: Any, strict: bool = True) -> Any:
+    if value is None:
+        return None
+
+    if strict:
+        raise TypeValidationError(expected_type=type(None), actual_type=type(value))
+
+    return value
+
+
 __all__ = [
     "validate_array",
     "validate_tuple",
     "validate_boolean",
     "validate_enum",
     "validate_equal",
+    "validate_null",
     "validate_nullable",
     "validate_number",
     "validate_integer",

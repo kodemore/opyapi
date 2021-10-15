@@ -23,8 +23,12 @@ def validate_maximum_items(value: list, expected_maximum: int) -> list:
     raise MaximumItemsValidationError(expected_maximum=expected_maximum)
 
 
-def validate_tuple(value: list, item_validator: List[Callable], additional_items: Callable = None) -> list:
+def validate_tuple(
+    value: list, item_validator: List[Callable], additional_items: Callable = None, strict: bool = False
+) -> list:
     if not isinstance(value, list):
+        if not strict:
+            return value
         raise TypeValidationError(expected_type="array", actual_type=type(value))
 
     list_length = len(value)
@@ -49,8 +53,11 @@ def validate_array(
     minimum_items: int = -1,
     maximum_items: int = -1,
     unique_items: bool = False,
+    strict: bool = True,
 ) -> list:
     if not isinstance(value, list):
+        if not strict:
+            return value
         raise TypeValidationError(expected_type="array", actual_type=type(value))
 
     result = []

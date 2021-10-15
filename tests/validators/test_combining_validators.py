@@ -228,3 +228,48 @@ def test_validate_type_validator_multiple_types() -> None:
         validate(True)
     with pytest.raises(ValueError):
         validate(False)
+
+
+def test_should_fail_all_of_on_mismatch_second() -> None:
+    # given
+    validate = build_validator_for(
+        {
+            "allOf": [
+                {"properties": {"bar": {"type": "integer"}}, "required": ["bar"]},
+                {"properties": {"foo": {"type": "string"}}, "required": ["foo"]},
+            ]
+        }
+    )
+
+    # then
+    with pytest.raises(ValueError):
+        validate({"foo": "baz"})
+
+
+def test_all_of_with_base_schema() -> None:
+    # given
+    validate = build_validator_for(
+        {
+            "allOf": [
+                {"properties": {"foo": {"type": "string"}}, "required": ["foo"]},
+                {"properties": {"baz": {"type": "null"}}, "required": ["baz"]},
+            ],
+            "properties": {"bar": {"type": "integer"}},
+            "required": ["bar"],
+        }
+    )
+    data = {"bar": 2, "baz": None, "foo": "quux"}
+
+    # then
+    assert validate(data)
+
+
+def test_all_of_bool_values() -> None:
+    # given
+    schema = {"allOf": [True, False]}
+    data = "foo"
+    validate = build_validator_for(schema)
+
+    # then
+    with pytest.raises(ValueError):
+        validate(data)

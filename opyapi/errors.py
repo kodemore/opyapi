@@ -2,7 +2,7 @@ from typing import Any
 
 
 class ValidationError(ValueError):
-    code: str
+    code: str = "validation_error"
     message: str
 
     def __init__(self, *args, **kwargs: Any):

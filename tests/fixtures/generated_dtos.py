@@ -5,7 +5,7 @@ This file was automatically generated from:
 /Users/krac/Projects/kodemore/opyapi/tests/fixtures/openapi.yml
 
 Generation time: 
-2021-08-14 15:02:38.152263 
+2021-10-15 16:05:02.122194 
 """
 
 import datetime
@@ -36,4 +36,4 @@ class Error:
 @dataclasses.dataclass()
 class Pet(NewPet):
     id: int
-    tags: typing.Optional[typing.List['PetTag']]
+    tags: typing.Optional[typing.List["PetTag"]]

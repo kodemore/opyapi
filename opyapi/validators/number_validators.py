@@ -23,7 +23,11 @@ def validate_number(
     exclusive_maximum: NumberUnion = None,
     multiple_of: NumberUnion = None,
     integer: bool = False,
+    strict: bool = True,
 ) -> NumberUnion:
+    if not strict and not isinstance(value, (int, float, Decimal)):
+        return value
+
     if value is True or value is False:
         raise TypeValidationError(expected_type=int if integer else Number, actual_type=type(value))
 
