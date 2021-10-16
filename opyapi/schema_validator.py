@@ -26,6 +26,7 @@ from opyapi.validators import (
     validate_boolean,
     validate_enum,
     validate_null,
+    validate_contains,
 )
 
 OBJECT_VALIDATOR_PROPERTIES = {
@@ -141,6 +142,9 @@ def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> 
 
     if "default" in schema:
         root_validators.append(partial(_return_default, default=schema["default"]))
+
+    if "contains" in schema:
+        root_validators.append(partial(validate_contains, validator=build_validator_for(schema["contains"])))
 
     if len(root_validators) > 1:
         return partial(validate_all_of, validators=root_validators)

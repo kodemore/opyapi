@@ -8,6 +8,7 @@ from opyapi.validators import (
     validate_boolean,
     validate_enum,
     validate_string,
+    validate_equal,
 )
 
 
@@ -83,3 +84,8 @@ def test_fail_validate_string(value: Any) -> None:
     assert e.value.args[0] == (
         "Passed value must be valid <class 'str'> type. " f"Actual type passed was {type(value)}."
     )
+
+
+def test_fail_equal_validation() -> None:
+    with pytest.raises(ValueError):
+        validate_equal(False, 0)

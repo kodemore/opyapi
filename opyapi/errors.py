@@ -156,3 +156,8 @@ class MaximumPropertiesValidationError(ObjectSizeValidationError):
 class DependencyValidationError(ObjectValidationError):
     code = "dependency_error"
     message = "Property `{property}` requires {dependencies} to be provided."
+
+
+class ContainsValidationError(ValidationError):
+    code = "contains_error"
+    message = "Failed to assert that `{value}` contains expected schema. {error}"
