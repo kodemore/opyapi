@@ -1,7 +1,7 @@
 import pathlib
 
 import pytest
-from opyapi import build_validator_for
+from opyapi import build_validator_for, JsonSchema
 import json
 
 
@@ -30,7 +30,8 @@ def pytest_generate_tests(metafunc):
 
 
 def test_json_schema_suite(schema, data, valid):
-    json_schema_validator = build_validator_for(schema)
+    json_schema = JsonSchema(schema)
+    json_schema_validator = build_validator_for(json_schema)
 
     try:
         json_schema_validator(data)

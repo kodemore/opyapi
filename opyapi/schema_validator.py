@@ -100,14 +100,17 @@ def _detect_schema_type(definition: Dict[str, Any]) -> str:
 
 
 def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> Callable:
-    if any_schema is True:
-        return lambda value: value
-    elif any_schema is False:
-        return partial(_fail, error=ValidationError("Could not validate {value}."))
-    elif not any_schema:
-        return lambda value: value
+    if isinstance(any_schema, JsonSchema):
+        schema: Union[bool, Dict[str, Any]] = any_schema.document  # type: ignore
+    else:
+        schema: Union[bool, Dict[str, Any]] = any_schema  # type: ignore
 
-    schema: Dict[str, Any] = any_schema  # type: ignore
+    if schema is True:
+        return lambda value: value
+    elif schema is False:
+        return partial(_fail, error=ValidationError("Could not validate {value}."))
+    elif not schema:
+        return lambda value: value
 
     root_validators = []
     if "type" in schema:
@@ -141,11 +144,8 @@ def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> 
 
     # there is no `if` keyword in schema but there are `then` and `else` keywords
     elif "then" in schema or "else" in schema:
-        if "then" in schema:
-            del schema["then"]
-        if "else" in schema:
-            del schema["else"]
-        if not schema:
+        keys = schema.keys() - ["then", "else"]
+        if not keys:
             return lambda x: x
 
     if "const" in schema:

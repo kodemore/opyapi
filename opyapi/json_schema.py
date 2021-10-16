@@ -5,7 +5,6 @@ from json import load as load_json
 from os import path
 from typing import Any, Dict, Optional, Union, List, Set, ItemsView, KeysView, ValuesView
 from typing import Protocol
-from datetime import datetime
 
 from ._yaml_support import load_yaml
 
@@ -199,6 +198,10 @@ class JsonSchema:
 
         self._id = id_
         self._document = document
+        if self._document is True or self._document is False:
+            self._ready = True
+            return
+
         self._ready = False
         self._current_path: List[Union[str, int]] = []
         self.anchors: Dict[str, str] = {}
@@ -206,7 +209,7 @@ class JsonSchema:
     @classmethod
     def from_file(cls, file_name: str) -> "JsonSchema":
         if not path.isfile(file_name):
-            raise ValueError(f"passed file name `{file_name}` is not a valid file.")
+            raise ValueError(f"Passed file name `{file_name}` is not a valid file.")
 
         return JsonSchemaStore.get(JsonUri(f"file://{file_name}"))
 
@@ -331,6 +334,15 @@ class JsonSchema:
 
     def __repr__(self) -> str:
         return f"JsonSchema({str(self._id)})"
+
+    def keys(self):
+        return self.document.keys()
+
+    def values(self):
+        return self.document.values()
+
+    def items(self):
+        return self.document.items()
 
 
 class JsonSchemaStore:
