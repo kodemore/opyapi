@@ -134,8 +134,19 @@ def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> 
     if "enum" in schema:
         return _build_enum_validator(schema)
 
-    if "if" in schema and ("then" in schema or "else" in schema):
-        return _build_conditional_validator(schema)
+    if "if" in schema:
+        if "then" in schema or "else" in schema:
+            return _build_conditional_validator(schema)
+        return lambda x: x  # there is only condition so it is a pass
+
+    # there is no `if` keyword in schema but there are `then` and `else` keywords
+    elif "then" in schema or "else" in schema:
+        if "then" in schema:
+            del schema["then"]
+        if "else" in schema:
+            del schema["else"]
+        if not schema:
+            return lambda x: x
 
     if "const" in schema:
         return _build_equal_validator(schema)

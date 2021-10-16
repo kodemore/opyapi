@@ -80,13 +80,17 @@ def validate_boolean(value: Any, strict: bool = True) -> bool:
 
 
 def validate_enum(value: Any, values: List[Union[str, int, float, bool]]) -> Union[str, int, float, bool]:
-    for item in values:  # `if value in values` expression does casting and we dont want it
-        if isinstance(value, bool):
-            if item is value:
+    for item in values:
+        if value != item:
+            continue
+
+        # fix python's bool to int casting
+        if type(item) is bool or type(value) is bool:
+            if type(value) == type(item):
                 return value
+            continue
         else:
-            if item == value:
-                return value
+            return value
 
     raise EnumValidationError(expected_values=values)
 
