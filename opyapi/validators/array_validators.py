@@ -47,6 +47,28 @@ def validate_tuple(
     return value
 
 
+class _Bool:
+    def __init__(self, value):
+        self.value = value
+
+    def __eq__(self, other):
+        if isinstance(other, _Bool) and other.value is self.value:
+            return True
+        return False
+
+
+def _wrap_bools(value: Any) -> Any:
+    if type(value) == bool:
+        if value:
+            return _Bool(1)
+        return _Bool(0)
+    if type(value) == list:
+        return [_wrap_bools(item) for item in value]
+    if type(value) == dict:
+        return {key: _wrap_bools(item) for key, item in value.items()}
+    return value
+
+
 def validate_array(
     value: list,
     item_validator: Callable = None,
@@ -69,11 +91,11 @@ def validate_array(
 
     # python fails to check in sets against bool and integers so we have to run this in two loops
     if unique_items:
-        seen: List[Any] = []
-        for item in result:
-            for other in seen:
-                if item is other:
-                    raise UniqueItemsValidationError()
+        unique_values = [_wrap_bools(item) for item in value]
+        seen = []
+        for item in unique_values:
+            if item in seen:
+                raise UniqueItemsValidationError()
             seen.append(item)
 
     if minimum_items > -1:

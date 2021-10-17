@@ -264,6 +264,11 @@ def _build_array_validator(definition: Dict[str, Any], strict: bool = True) -> C
             return _build_tuple_validator(definition, strict)
         elif isinstance(definition["items"], dict):
             validator = partial(validator, item_validator=build_validator_for(definition["items"]))
+        elif isinstance(definition["items"], bool):
+            if definition["items"]:
+                return validator
+            else:
+                return partial(validator, maximum_items=0)
 
     if "minItems" in definition:
         validator = partial(validator, minimum_items=definition["minItems"])

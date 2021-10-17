@@ -17,6 +17,19 @@ def test_pass_validate_unique() -> None:
     assert validate_array([1, 2, 3, 4, "true", True], unique_items=True)
 
 
+def test_fail_validate_unique_mathematically_unequal() -> None:
+    # given
+    schema = {'uniqueItems': True}
+    data = [1.0, 1.0, 1]
+
+    # when
+    validator = build_validator_for(schema)
+
+    # then
+    with pytest.raises(ValueError):
+        validator(data)
+
+
 def test_fail_validate_unique() -> None:
     with pytest.raises(UniqueItemsValidationError):
         validate_array([1, 1], unique_items=True)
@@ -145,3 +158,41 @@ def test_validate_array_unique() -> None:
 
     with pytest.raises(UniqueItemsValidationError):
         validate([1, 2, 3, 3, 4])
+
+
+def test_should_fail_non_empty_array() -> None:
+    # given
+    schema = {'items': False}
+    data = [1, 'foo', True]
+
+    # when
+    validate = build_validator_for(schema)
+
+    # then
+    with pytest.raises(ValueError):
+        validate(data)
+
+
+def test_should_fail_non_unique_items() -> None:
+    # given
+    schema = {'uniqueItems': True}
+    data = [1.0, 1.0, 1]
+
+    # when
+    validate = build_validator_for(schema)
+
+    # then
+    with pytest.raises(ValueError):
+        validate(data)
+
+
+def test_unique_array_of_objects_is_valid() -> None:
+    # given
+    schema = {'uniqueItems': True}
+    data = [{'foo': 'bar'}, {'foo': 'baz'}]
+
+    # when
+    validate = build_validator_for(schema)
+
+    # then
+    assert validate(data)

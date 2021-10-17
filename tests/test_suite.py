@@ -23,6 +23,8 @@ def pytest_generate_tests(metafunc):
             tests = json.load(open(suite))
             for section in tests:
                 for test in section["tests"]:
+                    #if test["description"] != "numbers are unique if mathematically unequal":
+                    #    continue
                     parameters.append(pytest.param(section["schema"], test["data"], test["valid"]))
                     test_ids.append(f"{version} / {suite.name} / {section['description']} / {test['description']}")
 
@@ -36,7 +38,7 @@ def test_json_schema_suite(schema, data, valid):
     try:
         json_schema_validator(data)
         result = True
-    except Exception:
+    except ValueError:
         result = False
 
     assert result is valid
