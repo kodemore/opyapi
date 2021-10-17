@@ -298,6 +298,9 @@ def _build_tuple_validator(definition: Dict[str, Any], strict: bool = False) -> 
     else:
         validator = partial(validator, additional_items=lambda x: x)
 
+    if "uniqueItems" in definition and definition["uniqueItems"]:
+        validator = partial(validator, unique_items=True)
+
     return validator
 
 

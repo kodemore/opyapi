@@ -24,12 +24,24 @@ def validate_maximum_items(value: list, expected_maximum: int) -> list:
 
 
 def validate_tuple(
-    value: list, item_validator: List[Callable], additional_items: Callable = None, strict: bool = False
+    value: list,
+    item_validator: List[Callable],
+    additional_items: Callable = None,
+    unique_items: bool = False,
+    strict: bool = False,
 ) -> list:
     if not isinstance(value, list):
         if not strict:
             return value
         raise TypeValidationError(expected_type="array", actual_type=type(value))
+
+    if unique_items:
+        unique_values = [_wrap_booleans(item) for item in value]
+        seen = []
+        for item in unique_values:
+            if item in seen:
+                raise UniqueItemsValidationError()
+            seen.append(item)
 
     list_length = len(value)
     validators_length = len(item_validator)
@@ -48,6 +60,11 @@ def validate_tuple(
 
 
 class _Bool:
+    """Python's booleans are ints and this is causing a lot of issues
+    with uniqueness checks. This wrapper class allow us to fix those
+    issues.
+    """
+
     def __init__(self, value):
         self.value = value
 
@@ -57,15 +74,15 @@ class _Bool:
         return False
 
 
-def _wrap_bools(value: Any) -> Any:
+def _wrap_booleans(value: Any) -> Any:
     if type(value) == bool:
         if value:
             return _Bool(1)
         return _Bool(0)
     if type(value) == list:
-        return [_wrap_bools(item) for item in value]
+        return [_wrap_booleans(item) for item in value]
     if type(value) == dict:
-        return {key: _wrap_bools(item) for key, item in value.items()}
+        return {key: _wrap_booleans(item) for key, item in value.items()}
     return value
 
 
@@ -91,7 +108,7 @@ def validate_array(
 
     # python fails to check in sets against bool and integers so we have to run this in two loops
     if unique_items:
-        unique_values = [_wrap_bools(item) for item in value]
+        unique_values = [_wrap_booleans(item) for item in value]
         seen = []
         for item in unique_values:
             if item in seen:
