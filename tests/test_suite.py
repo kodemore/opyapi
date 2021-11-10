@@ -17,7 +17,6 @@ SKIP_TESTS = [
     "draft-7 / dependencies.json / dependencies with boolean *",
     "draft-7 / dependencies.json / dependencies with escaped *",
     "draft-7 / id.json / *",
-    "draft-7 / propertyNames.json / propertyNames with boolean *",
     "draft-7 / properties.json / properties, patternProperties, *",
 ]
 

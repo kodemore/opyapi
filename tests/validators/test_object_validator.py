@@ -211,3 +211,11 @@ def test_validate_object_dependencies() -> None:
     assert validate({"name": "John Doe", "billing_address": "555 Debtor's Lane"})
     with pytest.raises(ValueError):
         validate({"name": "John Doe", "credit_card": 5555555555555555})
+
+
+def test_validate_property_names() -> None:
+    # given
+    validate = build_validator_for({"propertyNames": True})
+
+    # then
+    assert validate({'foo': 1})

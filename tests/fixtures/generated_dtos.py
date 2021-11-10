@@ -5,7 +5,7 @@ This file was automatically generated from:
 /Users/krac/Projects/kodemore/opyapi/tests/fixtures/openapi.yml
 
 Generation time: 
-2021-11-10 21:45:51.132542 
+2021-11-10 21:53:13.188181 
 """
 
 import datetime

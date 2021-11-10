@@ -308,8 +308,12 @@ def _build_object_validator(definition: Dict[str, Any], strict: bool = False) ->
     validator = partial(validate_object, strict=strict)
 
     if "propertyNames" in definition:
-        definition["propertyNames"]["type"] = "string"
-        property_names_validator = build_validator_for(definition["propertyNames"])
+        if isinstance(definition["propertyNames"], bool):
+            property_names_validator = build_validator_for(definition["propertyNames"])
+        else:
+            definition["propertyNames"]["type"] = "string"
+            property_names_validator = build_validator_for(definition["propertyNames"])
+
         validator = partial(validator, property_names=property_names_validator)
 
     if "minProperties" in definition:
