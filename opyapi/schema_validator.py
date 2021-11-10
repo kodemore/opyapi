@@ -114,7 +114,11 @@ def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> 
 
     root_validators = []
     if "type" in schema:
-        root_validators.append(_build_validator_for_type(schema["type"], schema))
+        if isinstance(schema["type"], list):
+            validators = [build_validator_for({"type": item}) for item in schema["type"]]
+            root_validators.append(partial(validate_any_of, validators=validators))
+        else:
+            root_validators.append(_build_validator_for_type(schema["type"], schema))
     else:
         detected_type = _detect_schema_type(schema)
         if detected_type:

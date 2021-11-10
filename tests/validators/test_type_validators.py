@@ -2,6 +2,7 @@ from typing import Any
 
 import pytest
 
+from opyapi import build_validator_for
 from opyapi.errors import EnumValidationError, TypeValidationError
 from opyapi.validators import (
     validate_array,
@@ -89,3 +90,12 @@ def test_fail_validate_string(value: Any) -> None:
 def test_fail_equal_validation() -> None:
     with pytest.raises(ValueError):
         validate_equal(False, 0)
+
+
+def test_can_specify_multiple_types() -> None:
+    # given
+    validate = build_validator_for({'type': ['integer', 'string']})
+
+    # then
+    with pytest.raises(ValueError):
+        validate(1.1)
