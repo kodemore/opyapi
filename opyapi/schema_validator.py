@@ -99,11 +99,11 @@ def _detect_schema_type(definition: Dict[str, Any]) -> str:
     return ""
 
 
-def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> Callable:
+def build_validator_for(any_schema: Any) -> Callable:
     if isinstance(any_schema, JsonSchema):
-        schema: Union[bool, Dict[str, Any]] = any_schema.document  # type: ignore
+        schema = any_schema.document  # type: ignore
     else:
-        schema: Union[bool, Dict[str, Any]] = any_schema  # type: ignore
+        schema = any_schema  # type: ignore
 
     if schema is True:
         return lambda value: value
@@ -112,7 +112,7 @@ def build_validator_for(any_schema: Union[JsonSchema, Dict[str, Any], bool]) -> 
     elif not schema:
         return lambda value: value
 
-    root_validators = []
+    root_validators: List[Any] = []
     if "type" in schema:
         if isinstance(schema["type"], list):
             validators = [build_validator_for({"type": item}) for item in schema["type"]]
@@ -359,7 +359,7 @@ def _build_object_validator(definition: Dict[str, Any], strict: bool = False) ->
         validator = partial(validator, pattern_properties=pattern_properties_validator)
 
     if "if" in definition and ("then" in definition or "else" in definition):
-        validator = _build_all_of_validator([validator, _build_conditional_validator(definition)])
+        validator = _build_all_of_validator([validator, _build_conditional_validator(definition)])  # type: ignore
 
     return validator
 
