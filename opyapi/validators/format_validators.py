@@ -1,30 +1,41 @@
 import base64
 import re
-from datetime import date, datetime, time, timedelta
+from datetime import time
 from decimal import Decimal
 from ipaddress import AddressValueError, IPv4Address, IPv6Address
-from typing import Any, Pattern, Union
+from typing import Any
 from uuid import UUID
 
 from opyapi.errors import FormatValidationError
-from opyapi._iso_datetime import (
-    parse_iso_date,
-    parse_iso_datetime,
-    parse_iso_duration,
-    parse_iso_time,
+
+ISO_8601_DATETIME_REGEX = re.compile(
+    r"^(\d{4})-?([0-1]\d)-?([0-3]\d)[t\s]?([0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(\.\d+)?(z|[+-]\d{2}:\d{2})?$",
+    re.I,
+)
+ISO_8601_DATE_REGEX = re.compile(r"^(\d{4})-?([0-1]\d)-?([0-3]\d)$", re.I)
+ISO_8601_TIME_REGEX = re.compile(
+    r"^(?P<time>[0-2]\d:?[0-5]\d:?[0-5]\d|23:59:60|235960)(?P<microseconds>\.\d+)?(?P<tzpart>z|[+-]\d{2}:\d{2})?$",
+    re.I,
+)
+
+ISO_8601_TIME_DURATION_REGEX = re.compile(
+    r"^(?P<sign>-?)P(?=\d|T\d)(?:(?P<weeks>\d+)W)?(?:(?P<days>\d+)D)?(?:T(?:(?P<hours>\d+)H)?(?:(?P<minutes>\d+)M)?(?:(?P<seconds>\d+(?:\.\d+)?)S)?)?$",
+    re.I,
 )
 
 
-def validate_format_pattern(value: Any) -> Pattern[str]:
+def validate_format_pattern(value: Any) -> str:
     try:
-        return re.compile(value)
+        re.compile(value)
+        return value
     except Exception:
         raise FormatValidationError(expected_format="pattern")
 
 
 def validate_format_bytes(value: Any) -> bytes:
     try:
-        return base64.b64decode(value)
+        base64.b64decode(value)
+        return value
     except Exception:
         pass
 
@@ -35,57 +46,41 @@ FALSY_EXPRESSION = {0, "0", "no", "n", "nope", "false", "f", "off"}
 TRUTHY_EXPRESSION = {1, "1", "ok", "yes", "y", "yup", "true", "t", "on"}
 
 
-def validate_format_boolean(value: Any) -> bool:
+def validate_format_boolean(value: Any) -> str:
     if value in FALSY_EXPRESSION:
-        return False
+        return value
 
     if value in TRUTHY_EXPRESSION:
-        return True
+        return value
 
     raise FormatValidationError(expected_format="boolean")
 
 
-def validate_format_datetime(value: Any) -> datetime:
-    if isinstance(value, datetime):
+def validate_format_datetime(value: Any) -> str:
+    if ISO_8601_DATETIME_REGEX.match(value):
+        return value
+    raise FormatValidationError(expected_format="date-time")
+
+
+def validate_format_date(value: Any) -> str:
+    if ISO_8601_DATE_REGEX.match(value):
         return value
 
-    value = str(value)
-    try:
-        return parse_iso_datetime(value)
-    except ValueError:
-        raise FormatValidationError(expected_format="date-time")
-
-
-def validate_format_date(value: Any) -> date:
-    if isinstance(value, date):
-        return value
-
-    value = str(value)
-    try:
-        return parse_iso_date(value)
-    except ValueError:
-        raise FormatValidationError(expected_format="date")
+    raise FormatValidationError(expected_format="date")
 
 
 def validate_format_time(value: Any) -> time:
-    if isinstance(value, time):
-        return value
-    value = str(value)
-    try:
-        return parse_iso_time(value)
-    except ValueError:
-        raise FormatValidationError(expected_format="time")
-
-
-def validate_format_time_duration(value: Any) -> timedelta:
-    if isinstance(value, timedelta):
+    if ISO_8601_TIME_REGEX.match(value):
         return value
 
-    value = str(value)
-    try:
-        return parse_iso_duration(value)
-    except Exception:
-        raise FormatValidationError(expected_format="time-duration")
+    raise FormatValidationError(expected_format="time")
+
+
+def validate_format_time_duration(value: Any) -> str:
+    if ISO_8601_TIME_DURATION_REGEX.match(value):
+        return value
+
+    raise FormatValidationError(expected_format="time-duration")
 
 
 # https://www.w3.org/TR/html5/forms.html#valid-e-mail-address
@@ -122,13 +117,13 @@ def validate_format_hostname(value: str) -> str:
     return value
 
 
-def validate_format_decimal(value: Any) -> Decimal:
+def validate_format_decimal(value: Any) -> str:
     if isinstance(value, Decimal):
-        return value
+        return str(value)
 
     try:
-        value = Decimal(value)
-        if not value.is_finite():
+        converted = Decimal(value)
+        if not converted.is_finite():
             raise FormatValidationError(expected_format="decimal")
 
     except Exception:
@@ -137,26 +132,30 @@ def validate_format_decimal(value: Any) -> Decimal:
     return value
 
 
-def validate_format_ip_address_v4(value: Any) -> IPv4Address:
+def validate_format_ip_address_v4(value: Any) -> str:
     try:
-        return IPv4Address(value)
+        IPv4Address(value)
+        return value
     except AddressValueError:
         raise FormatValidationError(expected_format="ip-address-v4")
 
 
-def validate_format_ip_address_v6(value: Any) -> IPv6Address:
+def validate_format_ip_address_v6(value: Any) -> str:
     try:
-        return IPv6Address(value)
+        IPv6Address(value)
+        return value
     except AddressValueError:
         raise FormatValidationError(expected_format="ip-address-v6")
 
 
-def validate_format_ip_address(value: Any) -> Union[IPv4Address, IPv6Address]:
+def validate_format_ip_address(value: Any) -> str:
     try:
-        return IPv4Address(value)
+        IPv4Address(value)
+        return value
     except AddressValueError:
         try:
-            return IPv6Address(value)
+            IPv6Address(value)
+            return value
         except AddressValueError:
             raise FormatValidationError(expected_format="ip-address")
 
@@ -200,9 +199,10 @@ def validate_format_url(value: Any) -> str:
     return value
 
 
-def validate_format_uuid(value: Any) -> UUID:
+def validate_format_uuid(value: Any) -> str:
     try:
-        return UUID(value)
+        UUID(value)
+        return value
     except Exception:
         raise FormatValidationError(expected_format="uuid")
 

@@ -2,7 +2,7 @@ from typing import Any
 
 
 class ValidationError(ValueError):
-    code: str
+    code: str = "validation_error"
     message: str
 
     def __init__(self, *args, **kwargs: Any):
@@ -156,3 +156,8 @@ class MaximumPropertiesValidationError(ObjectSizeValidationError):
 class DependencyValidationError(ObjectValidationError):
     code = "dependency_error"
     message = "Property `{property}` requires {dependencies} to be provided."
+
+
+class ContainsValidationError(ValidationError):
+    code = "contains_error"
+    message = "Failed to assert that `{value}` contains expected schema. {error}"
