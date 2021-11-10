@@ -58,7 +58,7 @@ validate_integer = partial(validate_number, integer=True)
 
 
 def validate_multiple_of(value: NumberUnion, multiple_of: NumberUnion) -> NumberUnion:
-    if not value % multiple_of == 0:  # type: ignore
+    if Decimal(str(value)) % Decimal(str(multiple_of)) != 0:  # type: ignore
         raise MultipleOfValidationError(multiple_of=multiple_of)
 
     return value
