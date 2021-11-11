@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "opyapi"
-version = "1.1.0"
+version = "1.2.0"
 description = "JsonSchem and OpenAPI tools for python."
 authors = [
     "Dawid Kraczkowski <dawid.kraczkowski@gmail.com>"
@@ -30,6 +30,9 @@ classifiers = [
 python = "^3.8"
 pyyaml = "^5.4.1"
 cleo = "^0.8.1"
+
+[tool.poetry.scripts]
+opyapi="opyapi.console.application:main"
 
 [tool.poetry.dev-dependencies]
 pytest = "^4.1.0"
