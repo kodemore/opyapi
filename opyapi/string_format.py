@@ -18,6 +18,7 @@ from opyapi.validators.format_validators import (
     validate_format_uri,
     validate_format_url,
     validate_format_uuid,
+    validate_format_password
 )
 
 
@@ -39,6 +40,7 @@ class _StringFormat:
     URI = "uri"
     URL = "url"
     UUID = "uuid"
+    PASSWORD = "password"
 
     def __init__(self):
         self._formats = {
@@ -59,6 +61,7 @@ class _StringFormat:
             self.URI: validate_format_uri,
             self.URL: validate_format_url,
             self.UUID: validate_format_uuid,
+            self.PASSWORD: validate_format_password
         }
 
     def __getitem__(self, format_name: str) -> Callable:

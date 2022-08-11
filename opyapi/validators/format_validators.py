@@ -207,6 +207,13 @@ def validate_format_uuid(value: Any) -> str:
         raise FormatValidationError(expected_format="uuid")
 
 
+def validate_format_password(value: Any) -> str:
+    try:
+        return str(value)
+    except Exception:
+        raise FormatValidationError(expected_format="password")
+
+
 __all__ = [
     "validate_format_boolean",
     "validate_format_bytes",
@@ -225,4 +232,5 @@ __all__ = [
     "validate_format_uri",
     "validate_format_url",
     "validate_format_uuid",
+    "validate_format_password"
 ]
