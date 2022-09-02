@@ -79,6 +79,8 @@ from opyapi.validators import validate_string_format
         ["b11b1836-ad3e-4944-9c80-eaccdac0487b", StringFormat.UUID],
         ["e643c4f2-f9c1-4287-b465-1e02ba7d902d", StringFormat.UUID],
         ["57766d9b-9ea2-4740-9b26-56dfdd79678a", StringFormat.UUID],
+        ["ThisCouldBeAPassword", StringFormat.PASSWORD],
+        ["!This@Could#Also$Be10A//Password", StringFormat.PASSWORD]
     ],
 )
 def test_pass_valid_format(given_string: str, given_format: str) -> None:
