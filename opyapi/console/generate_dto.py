@@ -1,6 +1,6 @@
 from os import path
 
-from cleo import Command
+from cleo.commands.command import Command
 
 from .dto_generator.generator import DtoGenerator
 

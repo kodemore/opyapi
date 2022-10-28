@@ -29,7 +29,7 @@ classifiers = [
 [tool.poetry.dependencies]
 python = "^3.8"
 pyyaml = "^5.4.1"
-cleo = "^0.8.1"
+cleo = "^1.0.0a5"
 
 [tool.poetry.scripts]
 opyapi="opyapi.console.application:main"
@@ -38,7 +38,7 @@ opyapi="opyapi.console.application:main"
 pytest = "^4.1.0"
 pytest-cov = "^2.5"
 pytest-mock = "^1.9"
-black = "21.10b0"
+black = "^22.10.0"
 isort = "^5.6.4"
 mypy = "^0.812"
 pylint = "^2.7.2"
