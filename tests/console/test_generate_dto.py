@@ -1,7 +1,9 @@
 from os import path
 
 import pytest
-from cleo import Application, Command, CommandTester
+from cleo.application import Application
+from cleo.commands.command import Command
+from cleo.testers.command_tester import CommandTester
 
 from opyapi.console.generate_dto import GenerateDtoCommand
 

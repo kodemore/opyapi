@@ -1,4 +1,4 @@
-from cleo import Application
+from cleo.application import Application
 
 from opyapi.__version__ import __version__
 from .generate_dto import GenerateDtoCommand
