@@ -1,6 +1,7 @@
 from os import path
 
 from cleo.commands.command import Command
+from cleo.helpers import argument, option
 
 from .dto_generator.generator import DtoGenerator
 
@@ -16,6 +17,31 @@ class GenerateDtoCommand(Command):
         { --snake-case : Converts property names to snake case }
 
     """
+    name = 'generate:dto'
+    arguments = [
+        argument(
+            "openapi-path",
+            description="path to openapi defintion file",
+        )
+    ]
+
+    options = [
+        option(
+            long_name="module-path",
+            description="Path to module file where generated classes will be stored, keep in mind this file will be automatically replaced!",
+            flag=False,
+            default="dto.py"
+        ),
+        option(
+            long_name="class-suffix",
+            description="Adds optional suffix for each class",
+        ),
+        option(
+            long_name="snake-case",
+            description="Converts property names to snake case",
+        ),
+
+    ]
 
     def handle(self):
         openapi_path = self.argument("openapi-path")
